@@ -13,11 +13,21 @@ class AddressListView: UIView {
     private var addresses: [Address] = []
     private var filteredAddress: [Address] = []
     
+    private lazy var stackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        return stackView
+    }()
+    
     private lazy var searchBar: UISearchBar = {
         let searchBar = UISearchBar()
         searchBar.translatesAutoresizingMaskIntoConstraints = false
-        searchBar.placeholder = "Rua, número, bairro"
         searchBar.delegate = self
+        searchBar.placeholder = "Rua, número, bairro"
+        searchBar.backgroundImage = UIImage()
+        searchBar.backgroundColor = .secondarySystemBackground
         return searchBar
     }()
     
@@ -68,15 +78,23 @@ class AddressListView: UIView {
 
 extension AddressListView: ViewCode {
     func setupSubviews() {
-        addSubview(searchBar)
-        addSubview(divider)
-        addSubview(tableView)
+        addSubview(stackView)
+        stackView.addArrangedSubview(searchBar)
+        stackView.addArrangedSubview(divider)
+        stackView.addArrangedSubview(tableView)
     }
     
     func setupConstraints() {
-        setupTableViewConstraints()
-        setupSearchbarConstaints()
-        setupDividerConstraints()
+        setupStackViewConstaints()
+    }
+    
+    func setupStackViewConstaints(){
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
+            stackView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            stackView.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
     }
     
     func setupSearchbarConstaints(){
