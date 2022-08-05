@@ -9,7 +9,6 @@ import UIKit
 
 class AddressSearchViewController: UIViewController {
     
-    
     private let deliveryApi = DeliveryApi()
 
     private let addressListView: AddressListView = {

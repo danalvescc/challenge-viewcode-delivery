@@ -8,19 +8,17 @@
 import UIKit
 
 class AddressListView: UIView {
-    
     private let addressCellIdentifier = "AddressCellIdentifier"
     
     private var addresses: [Address] = []
+    private var filteredAddress: [Address] = []
     
-    private lazy var searchbar: UISearchBar = {
-        let input = UISearchBar()
-        input.translatesAutoresizingMaskIntoConstraints = false
-        input.placeholder = "Rua, número, bairro"
-        input.layer.borderWidth = 10
-        input.layer.borderColor = UIColor.secondarySystemBackground.cgColor
-        input.barTintColor = .secondarySystemBackground
-        return input
+    private lazy var searchBar: UISearchBar = {
+        let searchBar = UISearchBar()
+        searchBar.translatesAutoresizingMaskIntoConstraints = false
+        searchBar.placeholder = "Rua, número, bairro"
+        searchBar.delegate = self
+        return searchBar
     }()
     
     private lazy var tableView: UITableView = {
@@ -41,7 +39,6 @@ class AddressListView: UIView {
     
     init(){
         super.init(frame: .zero)
-        
         setup()
     }
     
@@ -51,13 +48,27 @@ class AddressListView: UIView {
     
     func updateView(with addresses: [Address]) {
         self.addresses = addresses
+        self.filteredAddress = addresses
+        self.tableView.reloadData()
+    }
+    
+    func filterContentForSearchText(searchText: String){
+        if searchText == "" {
+            filteredAddress = addresses
+        } else {
+            filteredAddress = addresses.filter({ (address: Address) -> Bool in
+                return "\(address.street), \(address.number)".lowercased().contains(searchText.lowercased())
+                    || address.neighborhood.lowercased().contains(searchText.lowercased())
+            })
+        }
+        
         self.tableView.reloadData()
     }
 }
 
 extension AddressListView: ViewCode {
     func setupSubviews() {
-        addSubview(searchbar)
+        addSubview(searchBar)
         addSubview(divider)
         addSubview(tableView)
     }
@@ -70,16 +81,16 @@ extension AddressListView: ViewCode {
     
     func setupSearchbarConstaints(){
         NSLayoutConstraint.activate([
-            searchbar.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
-            searchbar.leadingAnchor.constraint(equalTo: leadingAnchor),
-            searchbar.trailingAnchor.constraint(equalTo: trailingAnchor),
-            searchbar.bottomAnchor.constraint(equalTo: divider.topAnchor)
+            searchBar.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
+            searchBar.leadingAnchor.constraint(equalTo: leadingAnchor),
+            searchBar.trailingAnchor.constraint(equalTo: trailingAnchor),
+            searchBar.bottomAnchor.constraint(equalTo: divider.topAnchor)
         ])
     }
     
     func setupDividerConstraints(){
         NSLayoutConstraint.activate([
-            divider.topAnchor.constraint(equalTo: searchbar.bottomAnchor),
+            divider.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
             divider.leadingAnchor.constraint(equalTo: leadingAnchor),
             divider.trailingAnchor.constraint(equalTo: trailingAnchor),
             divider.bottomAnchor.constraint(equalTo: tableView.topAnchor),
@@ -98,16 +109,22 @@ extension AddressListView: ViewCode {
 
 }
 
-extension AddressListView: UITableViewDataSource {
+
+extension AddressListView: UISearchBarDelegate {
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        filterContentForSearchText(searchText: searchText)
+    }
+}
+
+extension AddressListView: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: self.addressCellIdentifier) as! AddressCell
-        let data = self.addresses[indexPath.row]
+        let data = self.filteredAddress[indexPath.row]
         cell.updateView(address: "\(data.street), \(data.number)", neighborhood: data.neighborhood)
         return cell
     }
     
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-
-        return self.addresses.count
+        return self.filteredAddress.count
     }
 }
